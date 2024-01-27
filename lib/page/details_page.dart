@@ -6,8 +6,8 @@ import 'package:on_audio_query/on_audio_query.dart';
 // ignore: must_be_immutable
 class Player extends StatelessWidget {
   final List<SongModel> data;
-  int songIndex;
-  Player({super.key, required this.data, required this.songIndex});
+
+  Player({super.key, required this.data});
   @override
   Widget build(BuildContext context) {
     var controller = Get.find<PlayerController>();
@@ -21,7 +21,7 @@ class Player extends StatelessWidget {
               child: Center(
                   child: QueryArtworkWidget(
                 artworkClipBehavior: Clip.antiAliasWithSaveLayer,
-                id: data[songIndex].id,
+                id: controller.data[controller.currentSongIndex.value].id,
                 type: ArtworkType.AUDIO,
                 artworkHeight: double.infinity,
                 artworkWidth: double.infinity,

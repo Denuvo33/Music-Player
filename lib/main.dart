@@ -38,11 +38,27 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   var controller = Get.put(PlayerController());
   List<SongModel> allSongs = [];
+  List<SongModel> passSongs = [];
   TextEditingController searchController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
-    // NotificationService.notifInit();
+    loadSongs();
+  }
+
+  Future<void> loadSongs() async {
+    List<SongModel> songs = await controller.audioQuery.querySongs(
+      ignoreCase: true,
+      sortType: null,
+      orderType: OrderType.ASC_OR_SMALLER,
+      uriType: UriType.EXTERNAL,
+    );
+
+    setState(() {
+      allSongs = songs;
+      passSongs = songs;
+    });
   }
 
   @override
@@ -61,6 +77,21 @@ class _HomePageState extends State<HomePage> {
                 child: SearchBar(
                   controller: searchController,
                   hintText: 'Search Here',
+                  onChanged: (query) {
+                    setState(() {
+                      if (query.isEmpty) {
+                        loadSongs();
+                      } else {
+                        allSongs = controller.data.where((song) {
+                          var searcher = song.displayNameWOExt
+                              .toLowerCase()
+                              .contains(query.toLowerCase());
+
+                          return searcher;
+                        }).toList();
+                      }
+                    });
+                  },
                 )),
             const SizedBox(
               height: 10,
@@ -68,81 +99,84 @@ class _HomePageState extends State<HomePage> {
             const SizedBox(
               height: 10,
             ),
-            FutureBuilder<List<SongModel>>(
-                future: controller.audioQuery.querySongs(
-                  ignoreCase: true,
-                  sortType: null,
-                  orderType: OrderType.ASC_OR_SMALLER,
-                  uriType: UriType.EXTERNAL,
-                ),
-                builder: ((context, snapshot) {
-                  if (snapshot.data == null) {
-                    return Center(
-                      child: CircularProgressIndicator(),
-                    );
-                  } else if (snapshot.data!.isEmpty) {
-                    return Center(
-                      child: Text('You dont have any songs'),
-                    );
-                  } else {
-                    allSongs = snapshot.data!;
-                    return Expanded(
-                      child: Container(
-                        margin: EdgeInsets.all(5),
-                        child: ListView.builder(
-                          itemCount: allSongs.length,
-                          itemBuilder: (BuildContext context, int index) {
-                            controller.data = snapshot.data!;
-                            return Obx(
-                              () => Card(
-                                color: snapshot.data![index].id ==
-                                            controller.playId.value &&
-                                        controller.audioPlayer.playing
-                                    ? Colors.deepPurple
-                                    : Theme.of(context).primaryColor,
-                                child: ListTile(
-                                    onTap: () {
-                                      if (controller.playId.value !=
-                                          snapshot.data![index].id) {
-                                        controller.playsong(snapshot.data!,
-                                            snapshot.data![index].id, index);
-                                      } else {
-                                        Get.to(
-                                            () => Player(
-                                                  data: snapshot.data!,
-                                                  songIndex: index,
-                                                ),
-                                            transition: Transition.downToUp);
-                                      }
-                                    },
-                                    leading: QueryArtworkWidget(
-                                      id: snapshot.data![index].id,
-                                      type: ArtworkType.AUDIO,
-                                      nullArtworkWidget: Icon(
-                                        Icons.music_note_rounded,
-                                        size: 32,
-                                      ),
-                                    ),
-                                    trailing:
-                                        controller.playId.value == index &&
-                                                controller.isPlaying.value
-                                            ? IconButton(
-                                                onPressed: () {},
-                                                icon: Icon(
-                                                  Icons.play_arrow_rounded,
-                                                  size: 30,
-                                                ))
-                                            : null,
-                                    title: Text(snapshot
-                                        .data![index].displayNameWOExt)),
+            Expanded(
+              child: Container(
+                margin: EdgeInsets.all(5),
+                child: ListView.builder(
+                  itemCount: allSongs.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    controller.data = passSongs;
+                    return Obx(
+                      () => Card(
+                        color: allSongs[index].id == controller.playId.value &&
+                                controller.audioPlayer.playing
+                            ? Colors.deepPurple
+                            : Theme.of(context).primaryColor,
+                        child: ListTile(
+                            onTap: () {
+                              if (searchController.text.isEmpty) {
+                                if (controller.playId.value !=
+                                    allSongs[index].id) {
+                                  controller.playsong(
+                                      allSongs, allSongs[index].id, index);
+                                } else {
+                                  Get.to(
+                                      () => Player(
+                                            data: allSongs,
+                                          ),
+                                      transition: Transition.downToUp);
+                                }
+                              } else {
+                                int findIndexInPassSongs(String songId) {
+                                  for (int i = 0; i < passSongs.length; i++) {
+                                    if (passSongs[i].id.toString() == songId) {
+                                      return i;
+                                    }
+                                  }
+
+                                  return -1;
+                                }
+
+                                if (controller.playId.value !=
+                                    allSongs[index].id) {
+                                  controller.playsong(
+                                      passSongs,
+                                      allSongs[0].id,
+                                      findIndexInPassSongs(
+                                          allSongs[0].id.toString()));
+                                } else {
+                                  Get.to(
+                                      () => Player(
+                                            data: passSongs,
+                                          ),
+                                      transition: Transition.downToUp);
+                                }
+                              }
+                            },
+                            leading: QueryArtworkWidget(
+                              id: allSongs[index].id,
+                              type: ArtworkType.AUDIO,
+                              nullArtworkWidget: Icon(
+                                Icons.music_note_rounded,
+                                size: 32,
                               ),
-                            );
-                          },
-                        ),
+                            ),
+                            trailing: controller.playId.value == index &&
+                                    controller.isPlaying.value
+                                ? IconButton(
+                                    onPressed: () {},
+                                    icon: Icon(
+                                      Icons.play_arrow_rounded,
+                                      size: 30,
+                                    ))
+                                : null,
+                            title: Text(allSongs[index].displayNameWOExt)),
                       ),
                     );
-                  }
-                }))
+                  },
+                ),
+              ),
+            ),
           ],
         ),
       )),
