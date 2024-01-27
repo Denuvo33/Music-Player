@@ -25,7 +25,7 @@ class Player extends StatelessWidget {
                 type: ArtworkType.AUDIO,
                 artworkHeight: double.infinity,
                 artworkWidth: double.infinity,
-                nullArtworkWidget: SizedBox(
+                nullArtworkWidget: const SizedBox(
                     height: 250,
                     width: 250,
                     child: CircleAvatar(
@@ -42,7 +42,8 @@ class Player extends StatelessWidget {
                   () => Column(
                     children: [
                       Text(
-                        data[songIndex].displayNameWOExt,
+                        controller.data[controller.currentSongIndex.value]
+                            .displayNameWOExt,
                         style: TextStyle(fontSize: 20),
                       ),
                       SizedBox(
@@ -76,20 +77,22 @@ class Player extends StatelessWidget {
                         children: [
                           IconButton(
                               onPressed: () {
-                                if (songIndex == 0) {
-                                  songIndex = data.length - 1;
-                                  controller.playsong(
-                                      data[songIndex].uri!, data[songIndex].id);
+                                controller.audioPlayer.seekToPrevious();
+                                if (controller.currentSongIndex.value == 0) {
                                 } else {
-                                  songIndex--;
-                                  controller.playsong(
-                                      data[songIndex].uri!, data[songIndex].id);
+                                  controller.playId.value = controller
+                                      .data[controller.currentSongIndex.value]
+                                      .id;
                                 }
                               },
-                              icon: Icon(
-                                Icons.skip_previous,
-                                size: 50,
-                              )),
+                              icon: controller.currentSongIndex.value == 0
+                                  ? Icon(
+                                      Icons.skip_previous_rounded,
+                                      size: 50,
+                                      color: Colors.grey,
+                                    )
+                                  : Icon(Icons.skip_previous_rounded,
+                                      size: 50)),
                           Obx(
                             () => IconButton(
                               onPressed: () {
@@ -102,7 +105,8 @@ class Player extends StatelessWidget {
                                 }
                               },
                               icon: controller.isPlaying.value &&
-                                      data[songIndex].id ==
+                                      data[controller.currentSongIndex.value]
+                                              .id ==
                                           controller.playId.value
                                   ? Icon(Icons.pause, size: 50)
                                   : Icon(Icons.play_arrow_rounded, size: 50),
@@ -110,17 +114,23 @@ class Player extends StatelessWidget {
                           ),
                           IconButton(
                               onPressed: () {
-                                if (songIndex == data.length - 1) {
-                                  songIndex = 0;
-                                  controller.playsong(
-                                      data[songIndex].uri!, data[songIndex].id);
+                                controller.audioPlayer.seekToNext();
+                                if (controller.currentSongIndex.value ==
+                                    controller.data.length - 1) {
                                 } else {
-                                  songIndex++;
-                                  controller.playsong(
-                                      data[songIndex].uri!, data[songIndex].id);
+                                  controller.playId.value = controller
+                                      .data[controller.currentSongIndex.value]
+                                      .id;
                                 }
                               },
-                              icon: Icon(Icons.skip_next, size: 50))
+                              icon: controller.currentSongIndex.value ==
+                                      controller.data.length - 1
+                                  ? Icon(
+                                      Icons.skip_next_rounded,
+                                      size: 50,
+                                      color: Colors.grey,
+                                    )
+                                  : Icon(Icons.skip_next_rounded, size: 50))
                         ],
                       )
                     ],

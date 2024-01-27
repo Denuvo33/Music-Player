@@ -1,12 +1,17 @@
 import 'package:get/get.dart';
+import 'package:just_audio_background/just_audio_background.dart';
 import 'package:music_player/model/player_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:music_player/page/details_page.dart';
-import 'package:music_player/service/notif_service.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await JustAudioBackground.init(
+    androidNotificationChannelId: 'com.ryanheise.bg_demo.channel.audio',
+    androidNotificationChannelName: 'Audio playback',
+    androidNotificationOngoing: true,
+  );
   runApp(const MyApp());
 }
 
@@ -32,10 +37,12 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   var controller = Get.put(PlayerController());
+  List<SongModel> allSongs = [];
+  TextEditingController searchController = TextEditingController();
   @override
   void initState() {
     super.initState();
-    NotificationService.notifInit();
+    // NotificationService.notifInit();
   }
 
   @override
@@ -52,24 +59,11 @@ class _HomePageState extends State<HomePage> {
             Container(
                 margin: EdgeInsets.all(10),
                 child: SearchBar(
+                  controller: searchController,
                   hintText: 'Search Here',
                 )),
             const SizedBox(
               height: 10,
-            ),
-            Container(
-              margin: const EdgeInsets.all(5),
-              child: const SizedBox(
-                  height: 80,
-                  width: 100,
-                  child: Card(
-                      color: Colors.green,
-                      child: Center(
-                          child: Text(
-                        'Playlist',
-                        style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold),
-                      )))),
             ),
             const SizedBox(
               height: 10,
@@ -91,29 +85,27 @@ class _HomePageState extends State<HomePage> {
                       child: Text('You dont have any songs'),
                     );
                   } else {
+                    allSongs = snapshot.data!;
                     return Expanded(
                       child: Container(
                         margin: EdgeInsets.all(5),
                         child: ListView.builder(
-                          itemCount: snapshot.data!.length,
+                          itemCount: allSongs.length,
                           itemBuilder: (BuildContext context, int index) {
+                            controller.data = snapshot.data!;
                             return Obx(
                               () => Card(
                                 color: snapshot.data![index].id ==
-                                        controller.playId.value
+                                            controller.playId.value &&
+                                        controller.audioPlayer.playing
                                     ? Colors.deepPurple
                                     : Theme.of(context).primaryColor,
                                 child: ListTile(
                                     onTap: () {
-                                      NotificationService.showNotif(
-                                          title: 'Music Player',
-                                          body: snapshot
-                                              .data![index].displayNameWOExt);
                                       if (controller.playId.value !=
                                           snapshot.data![index].id) {
-                                        controller.playsong(
-                                            snapshot.data![index].uri!,
-                                            snapshot.data![index].id);
+                                        controller.playsong(snapshot.data!,
+                                            snapshot.data![index].id, index);
                                       } else {
                                         Get.to(
                                             () => Player(
