@@ -40,6 +40,8 @@ class _HomePageState extends State<HomePage> {
   List<SongModel> allSongs = [];
   List<SongModel> passSongs = [];
   TextEditingController searchController = TextEditingController();
+  FocusNode myfocus = FocusNode();
+  bool songIsStart = false;
 
   @override
   void initState() {
@@ -48,6 +50,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> loadSongs() async {
+    allSongs = [];
+    passSongs = [];
     List<SongModel> songs = await controller.audioQuery.querySongs(
       ignoreCase: true,
       sortType: null,
@@ -77,6 +81,17 @@ class _HomePageState extends State<HomePage> {
                 child: SearchBar(
                   controller: searchController,
                   hintText: 'Search Here',
+                  trailing: [
+                    if (searchController.text.isNotEmpty)
+                      IconButton(
+                          onPressed: () {
+                            searchController.clear();
+                            myfocus.unfocus();
+                            loadSongs();
+                          },
+                          icon: Icon(Icons.clear))
+                  ],
+                  focusNode: myfocus,
                   onChanged: (query) {
                     setState(() {
                       if (query.isEmpty) {
@@ -101,79 +116,189 @@ class _HomePageState extends State<HomePage> {
             ),
             Expanded(
               child: Container(
-                margin: EdgeInsets.all(5),
-                child: ListView.builder(
-                  itemCount: allSongs.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    controller.data = passSongs;
-                    return Obx(
-                      () => Card(
-                        color: allSongs[index].id == controller.playId.value &&
-                                controller.audioPlayer.playing
-                            ? Colors.deepPurple
-                            : Theme.of(context).primaryColor,
-                        child: ListTile(
-                            onTap: () {
-                              if (searchController.text.isEmpty) {
-                                if (controller.playId.value !=
-                                    allSongs[index].id) {
-                                  controller.playsong(
-                                      allSongs, allSongs[index].id, index);
-                                } else {
-                                  Get.to(
-                                      () => Player(
-                                            data: allSongs,
-                                          ),
-                                      transition: Transition.downToUp);
-                                }
-                              } else {
-                                int findIndexInPassSongs(String songId) {
-                                  for (int i = 0; i < passSongs.length; i++) {
-                                    if (passSongs[i].id.toString() == songId) {
-                                      return i;
+                // height: 50,
+                margin: const EdgeInsets.all(5),
+                child: Stack(
+                  alignment: Alignment.bottomCenter,
+                  children: [
+                    ListView.builder(
+                      padding: EdgeInsets.only(bottom: 100),
+                      itemCount: allSongs.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        controller.data = passSongs;
+                        return Obx(
+                          () => Column(
+                            children: [
+                              ListTile(
+                                onTap: () {
+                                  if (searchController.text.isEmpty) {
+                                    if (controller.playId.value !=
+                                        allSongs[index].id) {
+                                      controller.playsong(
+                                          allSongs, allSongs[index].id, index);
+                                      setState(() {
+                                        songIsStart = true;
+                                      });
+                                    } else {
+                                      myfocus.unfocus();
+                                      Get.to(
+                                          () => Player(
+                                                data: passSongs,
+                                              ),
+                                          transition: Transition.downToUp);
+                                    }
+                                  } else {
+                                    int findIndexInPassSongs(String songId) {
+                                      for (int i = 0;
+                                          i < passSongs.length;
+                                          i++) {
+                                        if (passSongs[i].id.toString() ==
+                                            songId) {
+                                          return i;
+                                        }
+                                      }
+
+                                      return -1;
+                                    }
+
+                                    if (controller.playId.value !=
+                                        allSongs[index].id) {
+                                      controller.playsong(
+                                          passSongs,
+                                          allSongs[index].id,
+                                          findIndexInPassSongs(
+                                              allSongs[index].id.toString()));
+                                      setState(() {
+                                        songIsStart = true;
+                                      });
+                                    } else {
+                                      Get.to(
+                                          () => Player(
+                                                data: passSongs,
+                                              ),
+                                          transition: Transition.downToUp);
                                     }
                                   }
-
-                                  return -1;
-                                }
-
-                                if (controller.playId.value !=
-                                    allSongs[index].id) {
-                                  controller.playsong(
-                                      passSongs,
-                                      allSongs[0].id,
-                                      findIndexInPassSongs(
-                                          allSongs[0].id.toString()));
-                                } else {
-                                  Get.to(
-                                      () => Player(
-                                            data: passSongs,
-                                          ),
-                                      transition: Transition.downToUp);
-                                }
-                              }
-                            },
-                            leading: QueryArtworkWidget(
-                              id: allSongs[index].id,
-                              type: ArtworkType.AUDIO,
-                              nullArtworkWidget: Icon(
-                                Icons.music_note_rounded,
-                                size: 32,
+                                },
+                                leading: QueryArtworkWidget(
+                                  id: allSongs[index].id,
+                                  type: ArtworkType.AUDIO,
+                                  nullArtworkWidget: Container(
+                                    height: 50,
+                                    width: 50,
+                                    decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                            begin: Alignment.topCenter,
+                                            end: Alignment.bottomCenter,
+                                            colors: [
+                                              Colors.blueGrey,
+                                              Colors.grey
+                                            ]),
+                                        borderRadius: BorderRadius.all(
+                                            Radius.circular(10))),
+                                    child: Icon(
+                                      Icons.music_note_rounded,
+                                      color: Colors.white,
+                                      size: 32,
+                                    ),
+                                  ),
+                                ),
+                                trailing: controller.playId.value == index &&
+                                        controller.isPlaying.value
+                                    ? IconButton(
+                                        onPressed: () {},
+                                        icon: Icon(
+                                          Icons.play_arrow_rounded,
+                                          size: 30,
+                                        ))
+                                    : null,
+                                title: Text(
+                                  allSongs[index].displayNameWOExt,
+                                  style: TextStyle(
+                                      color: allSongs[index].id ==
+                                                  controller.playId.value &&
+                                              controller.audioPlayer.playing
+                                          ? Colors.red
+                                          : Colors.white),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                subtitle: Text(allSongs[index].album!),
                               ),
-                            ),
-                            trailing: controller.playId.value == index &&
-                                    controller.isPlaying.value
-                                ? IconButton(
-                                    onPressed: () {},
-                                    icon: Icon(
-                                      Icons.play_arrow_rounded,
-                                      size: 30,
-                                    ))
-                                : null,
-                            title: Text(allSongs[index].displayNameWOExt)),
+                              SizedBox(
+                                height: 15,
+                              )
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                    Visibility(
+                      visible: songIsStart,
+                      child: GestureDetector(
+                        onTap: () {
+                          Get.to(() => Player(data: passSongs),
+                              transition: Transition.downToUp);
+                        },
+                        child: Container(
+                          height: 70,
+                          margin: EdgeInsets.all(5),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              Icon(
+                                Icons.music_note_rounded,
+                                size: 50,
+                              ),
+                              if (songIsStart)
+                                Obx(
+                                  () => Flexible(
+                                    child: Text(
+                                      controller
+                                          .data[
+                                              controller.currentSongIndex.value]
+                                          .displayNameWOExt,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ),
+                              Obx(
+                                () => IconButton(
+                                    onPressed: () {
+                                      if (controller.isPlaying.value) {
+                                        controller.audioPlayer.pause();
+                                        setState(() {
+                                          controller.isPlaying(false);
+                                        });
+                                      } else {
+                                        controller.audioPlayer.play();
+                                        setState(() {
+                                          controller.isPlaying(true);
+                                        });
+                                      }
+                                    },
+                                    icon: controller.isPlaying.value
+                                        ? Icon(
+                                            Icons.pause_outlined,
+                                            size: 50,
+                                          )
+                                        : Icon(
+                                            Icons.play_arrow_rounded,
+                                            size: 50,
+                                          )),
+                              )
+                            ],
+                          ),
+                          decoration: const BoxDecoration(
+                              gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.topRight,
+                                  colors: [Colors.grey, Colors.blueGrey]),
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(15))),
+                        ),
                       ),
-                    );
-                  },
+                    )
+                  ],
                 ),
               ),
             ),
