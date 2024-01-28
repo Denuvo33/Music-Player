@@ -13,20 +13,17 @@ class PlayerController extends GetxController {
   var duration = ''.obs;
   var position = ''.obs;
   var max = 0.0.obs;
-  var musicTitle = ''.obs;
   var currentSongIndex = 0.obs;
   var value = 0.0.obs;
   List<SongModel> data = [];
   List<AudioSource> allSongs = [];
   @override
-  void onInit() {
+  void onInit() async {
     // TODO: implement onInit
     super.onInit();
-
-    askPermission();
+    await askPermission();
+    askNotifPermission();
   }
-
-  initSong() async {}
 
   updatePosition() {
     audioPlayer.positionStream.listen((p) {
@@ -82,14 +79,17 @@ class PlayerController extends GetxController {
 
   askPermission() async {
     var perm = await Permission.storage.request();
-    var notif = await Permission.notification.request();
 
-    if (notif.isGranted) {
+    if (perm.isGranted) {
     } else {
       askPermission();
     }
+  }
 
-    if (perm.isGranted) {
+  askNotifPermission() async {
+    var notif = await Permission.notification.request();
+
+    if (notif.isGranted) {
     } else {
       askPermission();
     }
