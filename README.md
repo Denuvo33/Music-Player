@@ -1,16 +1,34 @@
-# music_player
+This is Music Player App Created With Flutter.
 
-A new Flutter project.
+What Features this app have❓
 
-## Getting Started
+-Detect all songs from phone storage
 
-This project is a starting point for a Flutter application.
+-Media Player notifications
 
-A few resources to get you started if this is your first Flutter project:
+-Play songs,skip songs,previous songs,Slider,Run in Background
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+-Search Song from List
+<br>
+<br>
+<br>
+What Flutter Packaged Im using for this App❓
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+-on audio query
+
+-just audio
+
+-just audio background
+
+-getX
+
+-permission handler
+<br>
+<br>
+
+<img src="https://github.com/Denuvo33/Music-Player/assets/106959180/ef73c5f1-0360-4d2e-a068-b38b5da8baa9" width="300" height="670">
+
+
+<img src="https://github.com/Denuvo33/Music-Player/assets/106959180/d783b108-3d36-4cd3-ab3d-8a68efb6ca17" width="300" height="670">
+
+<img src="https://github.com/Denuvo33/Music-Player/assets/106959180/5f383d8b-4393-4ef2-86d7-395b161b67e7" width="300" height="670">
