@@ -54,10 +54,16 @@ class _HomePageState extends State<HomePage> {
     passSongs = [];
     List<SongModel> songs = await controller.audioQuery.querySongs(
       ignoreCase: true,
-      sortType: null,
+      sortType: SongSortType.DATE_ADDED,
       orderType: OrderType.ASC_OR_SMALLER,
       uriType: UriType.EXTERNAL,
     );
+
+    songs = songs
+        .where((song) =>
+            song.displayName.toLowerCase().endsWith('.mp3') &&
+            song.duration! > Duration(minutes: 1).inMilliseconds)
+        .toList();
 
     setState(() {
       allSongs = songs;
@@ -69,60 +75,80 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Music Player'),
+        title: const Text('Music Player'),
       ),
-      body: SafeArea(
-          child: Container(
+      body: Container(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-                margin: EdgeInsets.all(10),
-                child: SearchBar(
-                  controller: searchController,
-                  hintText: 'Search Here',
-                  trailing: [
-                    if (searchController.text.isNotEmpty)
-                      IconButton(
-                          onPressed: () {
-                            searchController.clear();
-                            myfocus.unfocus();
-                            loadSongs();
-                          },
-                          icon: Icon(Icons.clear))
-                  ],
-                  focusNode: myfocus,
-                  onChanged: (query) {
-                    setState(() {
-                      if (query.isEmpty) {
-                        loadSongs();
-                      } else {
-                        allSongs = controller.data.where((song) {
-                          var searcher = song.displayNameWOExt
-                              .toLowerCase()
-                              .contains(query.toLowerCase());
+              margin: EdgeInsets.all(10),
+              child: SearchBar(
+                controller: searchController,
+                onTap: () {
+                  myfocus.requestFocus();
+                },
+                hintText: 'Search Here',
+                trailing: [
+                  if (searchController.text.isNotEmpty)
+                    IconButton(
+                        onPressed: () {
+                          searchController.clear();
+                          myfocus.unfocus();
+                          loadSongs();
+                        },
+                        icon: Icon(Icons.clear))
+                ],
+                focusNode: myfocus,
+                onChanged: (query) {
+                  setState(() {
+                    if (query.isEmpty) {
+                      loadSongs();
+                    } else {
+                      allSongs = controller.data.where((song) {
+                        var searcher = song.displayNameWOExt
+                            .toLowerCase()
+                            .contains(query.toLowerCase());
 
-                          return searcher;
-                        }).toList();
-                      }
-                    });
-                  },
-                )),
+                        return searcher;
+                      }).toList();
+                    }
+                  });
+                },
+              ),
+            ),
             const SizedBox(
               height: 10,
             ),
-            const SizedBox(
+            Container(
+              height: 60,
+              width: 100,
+              margin: EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.topRight,
+                  colors: [Colors.teal, Colors.blueGrey],
+                ),
+              ),
+              child: Center(
+                  child: Text(
+                'Total Songs \n ${passSongs.length}',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+              )),
+            ),
+            SizedBox(
               height: 10,
             ),
             Expanded(
               child: Container(
-                // height: 50,
                 margin: const EdgeInsets.all(5),
                 child: Stack(
                   alignment: Alignment.bottomCenter,
                   children: [
                     ListView.builder(
-                      padding: EdgeInsets.only(bottom: 100),
+                      padding: const EdgeInsets.only(bottom: 100),
                       itemCount: allSongs.length,
                       itemBuilder: (BuildContext context, int index) {
                         controller.data = passSongs;
@@ -186,7 +212,7 @@ class _HomePageState extends State<HomePage> {
                                   nullArtworkWidget: Container(
                                     height: 50,
                                     width: 50,
-                                    decoration: BoxDecoration(
+                                    decoration: const BoxDecoration(
                                         gradient: LinearGradient(
                                             begin: Alignment.topCenter,
                                             end: Alignment.bottomCenter,
@@ -196,7 +222,7 @@ class _HomePageState extends State<HomePage> {
                                             ]),
                                         borderRadius: BorderRadius.all(
                                             Radius.circular(10))),
-                                    child: Icon(
+                                    child: const Icon(
                                       Icons.music_note_rounded,
                                       color: Colors.white,
                                       size: 32,
@@ -207,7 +233,7 @@ class _HomePageState extends State<HomePage> {
                                         controller.isPlaying.value
                                     ? IconButton(
                                         onPressed: () {},
-                                        icon: Icon(
+                                        icon: const Icon(
                                           Icons.play_arrow_rounded,
                                           size: 30,
                                         ))
@@ -222,9 +248,10 @@ class _HomePageState extends State<HomePage> {
                                           : Colors.white),
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                                subtitle: Text(allSongs[index].album!),
+                                subtitle:
+                                    Text(allSongs[index].album.toString()),
                               ),
-                              SizedBox(
+                              const SizedBox(
                                 height: 15,
                               )
                             ],
@@ -241,13 +268,34 @@ class _HomePageState extends State<HomePage> {
                         },
                         child: Container(
                           height: 70,
-                          margin: EdgeInsets.all(5),
+                          decoration: const BoxDecoration(
+                              gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.topRight,
+                                  colors: [Colors.grey, Colors.blueGrey]),
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(15))),
+                          margin: const EdgeInsets.all(5),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: [
-                              Icon(
-                                Icons.music_note_rounded,
-                                size: 50,
+                              SizedBox(
+                                width: 15,
+                              ),
+                              if (songIsStart)
+                                QueryArtworkWidget(
+                                  id: controller
+                                      .data[controller.currentSongIndex.value]
+                                      .id,
+                                  type: ArtworkType.AUDIO,
+                                  nullArtworkWidget: Icon(
+                                    Icons.music_note_rounded,
+                                    color: Colors.white,
+                                    size: 50,
+                                  ),
+                                ),
+                              SizedBox(
+                                width: 15,
                               ),
                               if (songIsStart)
                                 Obx(
@@ -277,24 +325,17 @@ class _HomePageState extends State<HomePage> {
                                       }
                                     },
                                     icon: controller.isPlaying.value
-                                        ? Icon(
+                                        ? const Icon(
                                             Icons.pause_outlined,
                                             size: 50,
                                           )
-                                        : Icon(
+                                        : const Icon(
                                             Icons.play_arrow_rounded,
                                             size: 50,
                                           )),
                               )
                             ],
                           ),
-                          decoration: const BoxDecoration(
-                              gradient: LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.topRight,
-                                  colors: [Colors.grey, Colors.blueGrey]),
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(15))),
                         ),
                       ),
                     )
@@ -304,7 +345,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ],
         ),
-      )),
+      ),
     );
   }
 }
