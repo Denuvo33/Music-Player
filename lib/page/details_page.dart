@@ -29,115 +29,110 @@ class Player extends StatelessWidget {
                     height: 250,
                     width: 250,
                     child: CircleAvatar(
+                        backgroundColor: Colors.blueGrey,
                         child: Icon(
-                      Icons.music_note_rounded,
-                      size: 100,
-                    ))),
+                          Icons.music_note_rounded,
+                          size: 100,
+                          color: Colors.white,
+                        ))),
               )),
             ),
             Expanded(
-              child: Container(
-                // color: Colors.red,
-                child: Obx(
-                  () => Column(
-                    children: [
-                      Text(
-                        controller.data[controller.currentSongIndex.value]
-                            .displayNameWOExt,
-                        style: TextStyle(fontSize: 20),
-                      ),
-                      SizedBox(
-                        height: 20,
-                      ),
-                      Row(
-                        children: [
-                          Text(controller.position.value),
-                          Expanded(
-                              child: Slider(
-                                  value: controller.value.value,
-                                  thumbColor: Colors.teal,
-                                  // inactiveColor: Colors.grey,
-                                  // activeColor: Colors.black,
-                                  min:
-                                      Duration(seconds: 0).inSeconds.toDouble(),
-                                  max: controller.max.value,
-                                  onChanged: (value) {
-                                    controller
-                                        .changeDurationToSeconds(value.toInt());
-                                    value = value;
-                                  })),
-                          Text(controller.duration.value)
-                        ],
-                      ),
-                      SizedBox(
-                        height: 50,
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          IconButton(
-                              onPressed: () {
-                                controller.audioPlayer.seekToPrevious();
-                                if (controller.currentSongIndex.value == 0) {
-                                } else {
-                                  controller.playId.value = controller
-                                      .data[controller.currentSongIndex.value]
-                                      .id;
-                                }
-                              },
-                              icon: controller.currentSongIndex.value == 0
-                                  ? Icon(
-                                      Icons.skip_previous_rounded,
-                                      size: 50,
-                                      color: Colors.grey,
-                                    )
-                                  : Icon(Icons.skip_previous_rounded,
-                                      size: 50)),
-                          Obx(
-                            () => IconButton(
-                              onPressed: () {
-                                if (controller.isPlaying.value) {
-                                  controller.audioPlayer.pause();
-                                  controller.isPlaying(false);
-                                } else {
-                                  controller.audioPlayer.play();
-                                  controller.isPlaying(true);
-                                }
-                              },
-                              icon: controller.isPlaying.value &&
-                                      data[controller.currentSongIndex.value]
-                                              .id ==
-                                          controller.playId.value
-                                  ? Icon(Icons.pause, size: 50)
-                                  : Icon(Icons.play_arrow_rounded, size: 50),
-                            ),
+              child: Obx(
+                () => Column(
+                  children: [
+                    Text(
+                      controller.data[controller.currentSongIndex.value]
+                          .displayNameWOExt,
+                      style: TextStyle(fontSize: 20),
+                    ),
+                    SizedBox(
+                      height: 20,
+                    ),
+                    Row(
+                      children: [
+                        Text(controller.position.value),
+                        Expanded(
+                            child: Slider(
+                                value: controller.value.value,
+                                thumbColor: Colors.teal,
+                                min: const Duration(seconds: 0)
+                                    .inSeconds
+                                    .toDouble(),
+                                max: controller.max.value,
+                                onChanged: (value) {
+                                  controller
+                                      .changeDurationToSeconds(value.toInt());
+                                  value = value;
+                                })),
+                        Text(controller.duration.value)
+                      ],
+                    ),
+                    SizedBox(
+                      height: 30,
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        IconButton(
+                            onPressed: () {
+                              controller.audioPlayer.seekToPrevious();
+                              if (controller.currentSongIndex.value == 0) {
+                              } else {
+                                controller.playId.value = controller
+                                    .data[controller.currentSongIndex.value].id;
+                              }
+                            },
+                            icon: controller.currentSongIndex.value == 0
+                                ? Icon(
+                                    Icons.skip_previous_rounded,
+                                    size: 50,
+                                    color: Colors.grey,
+                                  )
+                                : Icon(Icons.skip_previous_rounded, size: 50)),
+                        Obx(
+                          () => IconButton(
+                            onPressed: () {
+                              if (controller.isPlaying.value) {
+                                controller.audioPlayer.pause();
+                                controller.isPlaying(false);
+                              } else {
+                                controller.audioPlayer.play();
+                                controller.isPlaying(true);
+                              }
+                            },
+                            icon: controller.isPlaying.value &&
+                                    data[controller.currentSongIndex.value]
+                                            .id ==
+                                        controller.playId.value
+                                ? Icon(Icons.pause, size: 50)
+                                : Icon(Icons.play_arrow_rounded, size: 50),
                           ),
-                          IconButton(
-                              onPressed: () {
-                                controller.audioPlayer.seekToNext();
-                                if (controller.currentSongIndex.value ==
-                                    controller.data.length - 1) {
-                                } else {
-                                  controller.playId.value = controller
-                                      .data[controller.currentSongIndex.value]
-                                      .id;
-                                }
-                              },
-                              icon: controller.currentSongIndex.value ==
-                                      controller.data.length - 1
-                                  ? Icon(
-                                      Icons.skip_next_rounded,
-                                      size: 50,
-                                      color: Colors.grey,
-                                    )
-                                  : Icon(Icons.skip_next_rounded, size: 50))
-                        ],
-                      )
-                    ],
-                  ),
+                        ),
+                        IconButton(
+                            onPressed: () {
+                              controller.audioPlayer.seekToNext();
+                              if (controller.currentSongIndex.value ==
+                                  controller.data.length - 1) {
+                              } else {
+                                controller.playId.value = controller
+                                    .data[controller.currentSongIndex.value].id;
+                              }
+                            },
+                            icon: controller.currentSongIndex.value ==
+                                    controller.data.length - 1
+                                ? Icon(
+                                    Icons.skip_next_rounded,
+                                    size: 50,
+                                    color: Colors.grey,
+                                  )
+                                : Icon(Icons.skip_next_rounded, size: 50))
+                      ],
+                    )
+                  ],
                 ),
               ),
-            )
+            ),
           ],
         ),
       ),
