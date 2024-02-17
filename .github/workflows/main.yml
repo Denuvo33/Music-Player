@@ -10,7 +10,7 @@ jobs:
     name: Build And Release new apk
     runs-on: ubuntu-latest
     steps:
-      - uses: action/checkout@v3
+      - uses: action/checkout@v4
       - uses: action/setup-java@v2
         with:
           distribution: 'zulu'
@@ -24,7 +24,7 @@ jobs:
       - run: flutter build apk --release --split-per-abi
 
       - name: Push to Releases
-        uses: ncipollo/releasea-action@v1
+        uses: ncipollo/releases-action@v1
         with:
           artifacts: "build/app/outputs/apk/release/*"
           tag: v0.0.1
